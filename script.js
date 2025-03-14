@@ -254,7 +254,7 @@ function initBackground() {
             y: Math.random() * backgroundCanvas.height,
             radius: Math.random() * 2.5,
             opacity: Math.random(),
-            speed: 0.06 + Math.random() * 0.04, // 增加星星移动速度
+            speed: 0.03 + Math.random() * 0.03, // 增加星星移动速度
             twinkleSpeed: 0.003 + Math.random() * 0.005,
             twinklePhase: Math.random() * Math.PI * 2
         });
@@ -494,7 +494,7 @@ function launchFirework(x, startY) {
         x: x,
         y: startY,
         targetY: targetY,
-        speed: 7 + Math.random() * 5,
+        speed: 5 + Math.random() * 5,
         color: color,
         size: 3,
         trail: [], // 尾迹
