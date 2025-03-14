@@ -1,0 +1,306 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #00f7ff;
+    --secondary-color: #7d00ff;
+    --accent-color: #ff00e5;
+    --dark-bg: #050518;
+    --panel-bg: rgba(10, 15, 30, 0.7);
+    --text-color: #ffffff;
+    --border-glow: 0 0 10px var(--primary-color);
+    --neon-glow: 0 0 20px var(--primary-color);
+}
+
+body {
+    background: var(--dark-bg);
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-color);
+    overflow: hidden;
+    line-height: 1.6;
+}
+
+.container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 界面元素 */
+.interface {
+    position: absolute;
+    z-index: 100;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    pointer-events: none;
+}
+
+.title {
+    text-align: center;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    pointer-events: auto;
+}
+
+.title h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px var(--primary-color);
+    color: var(--text-color);
+}
+
+.title h1 span {
+    color: var(--primary-color);
+}
+
+.title p {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+/* 音乐播放器 */
+.music-player {
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 247, 255, 0.2);
+    border-radius: 15px;
+    padding: 25px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--border-glow);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.music-player::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(0, 247, 255, 0.1),
+        transparent,
+        rgba(125, 0, 255, 0.1)
+    );
+    transform: rotate(30deg);
+    z-index: -1;
+}
+
+/* 上传区域 */
+.upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(0, 247, 255, 0.2), rgba(125, 0, 255, 0.2));
+    border: 1px solid var(--primary-color);
+    border-radius: 50px;
+    padding: 12px 25px;
+    color: var(--text-color);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+    background: linear-gradient(135deg, rgba(0, 247, 255, 0.3), rgba(125, 0, 255, 0.3));
+    box-shadow: var(--neon-glow);
+    transform: translateY(-2px);
+}
+
+.upload-btn .icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+#audioInput {
+    display: none;
+}
+
+.file-info {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+}
+
+/* 播放控制 */
+.player-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.control-btn {
+    background: linear-gradient(135deg, rgba(0, 247, 255, 0.2), rgba(125, 0, 255, 0.2));
+    border: 1px solid var(--primary-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    position: relative;
+}
+
+.control-btn:hover {
+    background: linear-gradient(135deg, rgba(0, 247, 255, 0.3), rgba(125, 0, 255, 0.3));
+    box-shadow: var(--neon-glow);
+    transform: scale(1.05);
+}
+
+.control-btn .pause-icon {
+    display: none;
+}
+
+.control-btn.playing .play-icon {
+    display: none;
+}
+
+.control-btn.playing .pause-icon {
+    display: inline;
+}
+
+.volume-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.volume-icon {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+#volumeControl {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+    outline: none;
+}
+
+#volumeControl::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    background: var(--text-color);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 247, 255, 0.8);
+}
+
+#volumeValue {
+    font-size: 0.9rem;
+    min-width: 45px;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* 进度条 */
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    width: 0%;
+    border-radius: 3px;
+    transition: width 0.1s linear;
+}
+
+.time-display {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-family: 'Orbitron', sans-serif;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* 画布 */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#background {
+    z-index: 0;
+}
+
+#visualizer {
+    z-index: 1;
+}
+
+#fireworks {
+    z-index: 2;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .title h1 {
+        font-size: 1.8rem;
+    }
+    
+    .music-player {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .player-controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .volume-container {
+        width: 100%;
+    }
+} 
