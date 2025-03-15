@@ -44,6 +44,92 @@ const particles = []; // 爆炸的粒子
 let smoothedData = [];
 const smoothingFactor = 0.8; // 平滑因子 (0-1)，越大越平滑
 
+// 宇宙飞船进度条功能
+function createSpaceshipIcon() {
+    // 创建一个新的canvas元素来绘制飞船
+    const shipCanvas = document.createElement('canvas');
+    shipCanvas.width = 30;
+    shipCanvas.height = 20;
+    const shipCtx = shipCanvas.getContext('2d');
+    
+    // 绘制飞船主体
+    shipCtx.fillStyle = '#00f7ff';
+    shipCtx.beginPath();
+    shipCtx.moveTo(25, 10); // 飞船头部
+    shipCtx.lineTo(5, 5);   // 左上角
+    shipCtx.lineTo(0, 10);  // 左中
+    shipCtx.lineTo(5, 15);  // 左下角
+    shipCtx.lineTo(25, 10); // 回到头部
+    shipCtx.closePath();
+    shipCtx.fill();
+    
+    // 绘制飞船窗口
+    shipCtx.fillStyle = '#ffffff';
+    shipCtx.beginPath();
+    shipCtx.arc(15, 10, 3, 0, Math.PI * 2);
+    shipCtx.fill();
+    
+    // 绘制引擎喷射
+    shipCtx.fillStyle = '#ff5500';
+    shipCtx.beginPath();
+    shipCtx.moveTo(0, 10);
+    shipCtx.lineTo(-5, 7);
+    shipCtx.lineTo(-8, 10);
+    shipCtx.lineTo(-5, 13);
+    shipCtx.lineTo(0, 10);
+    shipCtx.closePath();
+    shipCtx.fill();
+    
+    // 添加发光效果
+    shipCtx.shadowBlur = 10;
+    shipCtx.shadowColor = '#00f7ff';
+    shipCtx.strokeStyle = '#00f7ff';
+    shipCtx.lineWidth = 1;
+    shipCtx.stroke();
+    
+    // 返回飞船图像数据
+    return shipCanvas;
+}
+
+function initSpaceshipProgressBar() {
+    const spaceshipIcon = createSpaceshipIcon();
+    
+    // 添加CSS样式使进度条容器成为相对定位
+    progressContainer.style.position = 'relative';
+    progressContainer.style.overflow = 'visible';
+    
+    // 创建飞船元素并添加到DOM
+    const shipElement = document.createElement('div');
+    shipElement.id = 'spaceship';
+    shipElement.style.position = 'absolute';
+    shipElement.style.top = '-10px';
+    shipElement.style.left = '0';
+    shipElement.style.width = '30px';
+    shipElement.style.height = '20px';
+    shipElement.style.backgroundSize = 'contain';
+    shipElement.style.backgroundRepeat = 'no-repeat';
+    shipElement.style.backgroundPosition = 'center';
+    shipElement.style.zIndex = '10';
+    shipElement.style.transition = 'left 0.1s linear';
+    shipElement.style.pointerEvents = 'none'; // 防止飞船干扰点击事件
+    
+    // 将飞船图像设置为背景
+    const dataURL = spaceshipIcon.toDataURL();
+    shipElement.style.backgroundImage = `url(${dataURL})`;
+    
+    progressContainer.appendChild(shipElement);
+    
+    // 添加CSS动画
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        @keyframes fadeOut {
+            0% { opacity: 0.7; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+    `;
+    document.head.appendChild(styleElement);
+}
+
 // 调整画布大小
 function resizeCanvases() {
     const width = window.innerWidth;
@@ -84,6 +170,9 @@ window.addEventListener('load', () => {
     fireworksCanvas.addEventListener('click', (e) => {
         launchFirework(e.clientX, window.innerHeight);
     });
+    
+    // 初始化宇宙飞船进度条
+    initSpaceshipProgressBar();
     
     // 立即开始动画循环，不等待音乐播放
     startAnimations();
@@ -216,6 +305,40 @@ function updateProgress() {
     if (duration > 0) {
         const progressPercent = (currentTime / duration) * 100;
         progressBar.style.width = progressPercent + '%';
+        
+        // 更新飞船位置
+        const spaceship = document.getElementById('spaceship');
+        if (spaceship) {
+            // 计算飞船位置，考虑飞船宽度，使飞船中心对准进度点
+            const shipPosition = (progressContainer.clientWidth * progressPercent / 100) - 15;
+            spaceship.style.left = `${shipPosition}px`;
+            
+            // 添加小尾迹效果
+            const trail = document.createElement('div');
+            trail.className = 'ship-trail';
+            trail.style.position = 'absolute';
+            trail.style.width = '5px';
+            trail.style.height = '5px';
+            trail.style.borderRadius = '50%';
+            trail.style.backgroundColor = 'rgba(0, 247, 255, 0.7)';
+            trail.style.top = '7px';
+            trail.style.left = `${shipPosition}px`;
+            trail.style.zIndex = '9';
+            trail.style.pointerEvents = 'none';
+            
+            // 添加动画效果
+            trail.style.animation = 'fadeOut 1s forwards';
+            
+            // 添加到DOM
+            progressContainer.appendChild(trail);
+            
+            // 一段时间后移除尾迹元素
+            setTimeout(() => {
+                if (trail.parentNode) {
+                    trail.parentNode.removeChild(trail);
+                }
+            }, 1000);
+        }
         
         // 更新当前时间显示
         currentTimeDisplay.textContent = formatTime(currentTime);
@@ -488,26 +611,47 @@ function launchFirework(x, startY) {
     ];
     
     const color = colors[Math.floor(Math.random() * colors.length)];
-    
+    const fireworkType = Math.floor(Math.random() * 4);  // 随机选择烟花类型 (0: 普通, 1: 花朵, 2: 五角星, 3: 爱心)
     // 创建上升的烟花
     fireworks.push({
         x: x,
         y: startY,
         targetY: targetY,
-        speed: 7 + Math.random() * 5,
+        speed: 12 + Math.random() * 5,
         color: color,
         size: 3,
         trail: [], // 尾迹
         trailLength: 10, // 尾迹长度
-        exploded: false
+        exploded: false,
+        type: fireworkType 
     });
     
     console.log("烟花已发射:", x, startY, "目标高度:", targetY);
 }
 
-function createFireworks(x, y, color) {
+function createFireworks(x, y, color, type) {
     const particleCount = 150 + Math.floor(Math.random() * 100); // 150-250个粒子
     
+    // 根据烟花类型创建不同的爆炸效果
+    switch(type) {
+        case 0: // 普通烟花 - 随机散开的粒子
+            createNormalFirework(x, y, color, particleCount);
+            break;
+        case 1: // 花朵形状
+            createFlowerFirework(x, y, color, particleCount);
+            break;
+        case 2: // 五角星形状
+            createStarFirework(x, y, color, particleCount);
+            break;
+        case 3: // 爱心形状
+            createHeartFirework(x, y, color, particleCount);
+            break;
+    }
+
+    console.log("烟花爆炸:", x, y, "类型:", type, "粒子数:", particleCount);
+    }
+
+function createNormalFirework(x, y, color, particleCount) {
     // 创建爆炸粒子
     for (let i = 0; i < particleCount; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -522,11 +666,100 @@ function createFireworks(x, y, color) {
             color: color,
             alpha: 1,
             size: size,
-            gravity: 0.05 + Math.random() * 0.05
+            gravity: 0.05 + Math.random() * 0.05,
+            type: 0
         });
     }
+}
+function createFlowerFirework(x, y, color, particleCount) {
+    const petalCount = 8; // 花瓣数量
+    const particlesPerPetal = Math.floor(particleCount / petalCount);
     
-    console.log("烟花爆炸:", x, y, "粒子数:", particleCount);
+    for (let i = 0; i < petalCount; i++) {
+        const baseAngle = (i / petalCount) * Math.PI * 2;
+        
+        for (let j = 0; j < particlesPerPetal; j++) {
+            // 在基础角度周围添加一些随机偏移，形成花瓣形状
+            const angle = baseAngle + (Math.random() * 0.5 - 0.25);
+            const distance = 0.5 + Math.random() * 0.5; // 粒子到中心的距离比例
+            const speed = 1 + Math.random() * 3;
+            const size = 1 + Math.random() * 2;
+            
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed * distance,
+                vy: Math.sin(angle) * speed * distance,
+                color: color,
+                alpha: 1,
+                size: size,
+                gravity: 0.03 + Math.random() * 0.03, // 降低重力，让花朵形状保持更久
+                type: 1
+            });
+        }
+    }
+}
+
+// 五角星形状烟花
+function createStarFirework(x, y, color, particleCount) {
+    const points = 5; // 五角星的点数
+    const particlesPerPoint = Math.floor(particleCount / points);
+    
+    for (let i = 0; i < points; i++) {
+        // 五角星的每个点
+        const angle1 = (i / points) * Math.PI * 2;
+        // 下一个点的角度
+        const angle2 = ((i + 1) % points / points) * Math.PI * 2;
+        
+        for (let j = 0; j < particlesPerPoint; j++) {
+            // 在两个角度之间创建粒子，形成星形的边
+            const t = j / particlesPerPoint;
+            const angle = angle1 * (1 - t) + angle2 * t;
+            const distance = 0.8 + Math.random() * 0.4; // 粒子到中心的距离
+            const speed = 1 + Math.random() * 2;
+            
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed * distance,
+                vy: Math.sin(angle) * speed * distance,
+                color: color,
+                alpha: 1,
+                size: 1.5 + Math.random() * 1.5,
+                gravity: 0.02 + Math.random() * 0.02, // 更低的重力
+                type: 2
+            });
+        }
+    }
+}
+
+// 爱心形状烟花
+function createHeartFirework(x, y, color, particleCount) {
+    for (let i = 0; i < particleCount; i++) {
+        // 参数方程生成心形
+        const t = Math.random() * Math.PI * 2;
+        // 心形参数方程
+        const heartX = 16 * Math.pow(Math.sin(t), 3);
+        const heartY = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        
+        // 缩放和反转Y轴（因为在屏幕坐标系中Y轴向下）
+        const scale = 0.03 + Math.random() * 0.02;
+        const angle = Math.atan2(-heartY, heartX); // 计算粒子运动方向
+        const distance = Math.sqrt(heartX*heartX + heartY*heartY);
+        const speed = 1 + Math.random() * 2;
+        
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed * scale * distance,
+            vy: Math.sin(angle) * speed * scale * distance,
+            color: color,
+            alpha: 1,
+            size: 1.5 + Math.random() * 1.5,
+            gravity: 0.01 + Math.random() * 0.02, // 更低的重力
+            type: 3
+        });
+    }
 }
 
 function updateFireworks() {
@@ -547,7 +780,7 @@ function updateFireworks() {
             
             // 到达目标高度，爆炸
             if (fw.y <= fw.targetY) {
-                createFireworks(fw.x, fw.y, fw.color);
+                createFireworks(fw.x, fw.y, fw.color, fw.type);
                 fw.exploded = true;
             }
         } else {
@@ -608,13 +841,107 @@ function drawFireworks() {
         fwCtx.shadowBlur = 10;
         fwCtx.shadowColor = p.color;
         
-        fwCtx.beginPath();
-        fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        fwCtx.fill();
+        // 根据粒子类型绘制不同形状
+        switch(p.type) {
+            case 0: // 普通圆形粒子
+                fwCtx.beginPath();
+                fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                fwCtx.fill();
+                break;
+                
+            case 1: // 花朵形状的粒子
+                drawFlowerParticle(p);
+                break;
+                
+            case 2: // 五角星形状的粒子
+                drawStarParticle(p);
+                break;
+                
+            case 3: // 爱心形状的粒子
+                drawHeartParticle(p);
+                break;
+        }
     }
     
     fwCtx.globalAlpha = 1;
     fwCtx.shadowBlur = 0;
+}
+
+function drawFlowerParticle(p) {
+    const petalCount = 5;
+    const petalSize = p.size * 1.5;
+    
+    fwCtx.beginPath();
+    // 绘制中心圆
+    fwCtx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
+    fwCtx.fill();
+    
+    // 绘制花瓣
+    for (let i = 0; i < petalCount; i++) {
+        const angle = (i / petalCount) * Math.PI * 2;
+        const petalX = p.x + Math.cos(angle) * petalSize;
+        const petalY = p.y + Math.sin(angle) * petalSize;
+        
+        fwCtx.beginPath();
+        fwCtx.arc(petalX, petalY, p.size, 0, Math.PI * 2);
+        fwCtx.fill();
+    }
+}
+
+// 绘制五角星形状的粒子
+function drawStarParticle(p) {
+    const points = 5;
+    const outerRadius = p.size * 2;
+    const innerRadius = p.size * 0.8;
+    
+    fwCtx.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const angle = (i / (points * 2)) * Math.PI * 2;
+        const x = p.x + Math.cos(angle) * radius;
+        const y = p.y + Math.sin(angle) * radius;
+        
+        if (i === 0) {
+            fwCtx.moveTo(x, y);
+        } else {
+            fwCtx.lineTo(x, y);
+        }
+    }
+    fwCtx.closePath();
+    fwCtx.fill();
+}
+
+// 绘制爱心形状的粒子
+function drawHeartParticle(p) {
+    const size = p.size * 2;
+    
+    fwCtx.beginPath();
+    // 绘制爱心
+    fwCtx.moveTo(p.x, p.y + size * 0.3);
+    // 左半部分
+    fwCtx.bezierCurveTo(
+        p.x, p.y, 
+        p.x - size, p.y, 
+        p.x - size, p.y - size * 0.5
+    );
+    fwCtx.bezierCurveTo(
+        p.x - size, p.y - size * 1.1, 
+        p.x - size * 0.5, p.y - size * 1.2, 
+        p.x, p.y - size * 0.7
+    );
+    // 右半部分
+    fwCtx.bezierCurveTo(
+        p.x + size * 0.5, p.y - size * 1.2, 
+        p.x + size, p.y - size * 1.1, 
+        p.x + size, p.y - size * 0.5
+    );
+    fwCtx.bezierCurveTo(
+        p.x + size, p.y, 
+        p.x, p.y, 
+        p.x, p.y + size * 0.3
+    );
+    fwCtx.closePath();
+    fwCtx.fill();
 }
 
 // 动画循环
